@@ -1,0 +1,134 @@
+enable
+configure terminal
+no ip domain lookup
+hostname R2
+banner motd #WARNING: Unauthorized Access is Prohibited!#
+
+line console 0
+password admin
+login
+exit
+
+enable secret admin
+service password-encryption
+
+ip domain-name R2.com
+username admin secret admin
+crypto key generate rsa
+1024
+ip ssh version 2
+
+line vty 0 4
+login local
+transport input ssh
+access-class ADMIN-REMOTA in
+exit
+
+ip access-list standard ADMIN-REMOTA
+permit 172.17.20.0 0.0.0.255
+exit
+
+interface se0/1/0
+description Ruta a R1
+ip address 10.254.1.2 255.255.255.252
+no shutdown
+
+interface se0/1/1
+description Ruta a R3 (Remoto)
+ip address 10.254.4.2 255.255.255.252
+no shutdown
+
+interface se0/2/0
+description Ruta al ISP (Internet)
+ip address 64.100.0.2 255.255.255.252
+no shutdown
+exit
+
+interface gi0/0/0
+description Ruta a Administracion-MSW2
+ip address 10.254.5.2 255.255.255.252
+no shutdown
+
+interface gi0/0/1
+description Ruta a Planta-MSW2
+ip address 10.254.6.2 255.255.255.252
+no shutdown
+exit
+
+ip route 0.0.0.0 0.0.0.0 s0/2/0
+
+router ospf 10
+router-id 6.6.6.6
+network 10.0.0.1 0.0.0.0 area 0
+network 10.254.1.2 0.0.0.0 area 0
+network 10.254.4.2 0.0.0.0 area 0
+network 10.254.5.2 0.0.0.0 area 0
+network 10.254.6.2 0.0.0.0 area 0
+passive-interface se0/2/0
+auto-cost reference-bandwidth 10000
+exit
+
+interface range gi0/0/0-1
+ip ospf network point-to-point
+
+interface se0/1/0
+ip ospf network point-to-point
+
+interface se0/1/1
+ip ospf network point-to-point
+ip ospf cost 1
+exit
+
+ip nat pool NAT-POOL 209.165.200.233 209.165.200.234 netmask 255.255.255.252
+ip nat inside source list 101 pool NAT-POOL overload
+ip nat inside source static 10.254.7.2 209.165.200.228 
+
+access-list 101 permit tcp 172.0.0.0 0.255.255.255 any
+access-list 101 permit ip 172.0.0.0 0.255.255.255 any
+access-list 101 permit tcp 10.254.0.0 0.0.255.255 any
+access-list 101 permit ip 10.254.0.0 0.0.255.255 any
+
+interface range gi0/0/0-1
+ip nat inside
+
+interface se0/1/0
+ip nat inside
+
+interface s0/2/0
+ip nat outside
+exit
+
+crypto isakmp policy 10
+encr aes 256
+authentication pre-share
+group 5
+exit
+
+crypto isakmp key admin address 64.100.1.2
+
+crypto ipsec transform-set GRE-VPN esp-aes 256 esp-sha-hmac
+
+crypto map GRE-MAP 10 ipsec-isakmp 
+set peer 64.100.1.2
+set transform-set GRE-VPN 
+match address GRE-VPN-ACL
+exit
+
+ip access-list extended GRE-VPN-ACL
+permit gre host 64.100.0.2 host 64.100.1.2
+exit
+
+interface se0/2/0
+crypto map GRE-MAP
+exit
+
+interface tunnel 1
+ip address 10.0.0.1 255.255.255.252
+tunnel source se0/2/0
+tunnel destination 64.100.1.2
+exit
+
+ntp master
+ntp update-calendar
+end
+exit

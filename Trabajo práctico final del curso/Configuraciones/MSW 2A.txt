@@ -1,0 +1,194 @@
+enable
+configure terminal
+no ip domain lookup
+hostname Administracion-MSW1
+banner motd #WARNING: Unauthorized Access is Prohibited!#
+
+line console 0
+password admin
+login
+exit
+
+enable secret admin
+service password-encryption
+
+spanning-tree mode rapid-pvst
+
+ip domain-name MSW2A.com
+username admin secret admin
+crypto key generate rsa
+1024
+ip ssh version 2
+
+line vty 0 15
+login local
+transport input ssh
+access-class ADMIN-REMOTA in
+exit
+
+ip access-list standard ADMIN-REMOTA
+permit 172.17.20.0 0.0.0.255
+exit
+
+vlan 10
+name Administración
+vlan 11
+name Legales
+vlan 12
+name RRHH
+vlan 13
+name Gerencia
+vlan 20
+name Mantenimiento
+vlan 21
+name Ingenieria
+vlan 30
+name Logistica
+vlan 31
+name Porteria
+vlan 40
+name CCTV
+vlan 50
+name Voz
+vlan 100
+name Administracion_Remota
+vlan 1000
+name Sin_Uso
+exit
+
+interface range fa0/1-4
+description Puerto Troncal
+switchport mode access
+switchport mode trunk
+switchport trunk native vlan 1
+switchport trunk allowed vlan 1,10,11,12,13,20,21,30,31,40,50,100
+no shutdown
+
+interface range fa0/7-24, gi0/1-2
+description Puerto sin Utilizar
+switchport mode access
+switchport access vlan 1000
+shutdown
+exit
+
+ip routing
+
+interface vlan 10
+description Gateway para la VLAN 10
+ip address 172.17.10.2 255.255.255.0
+standby version 2
+standby 10 ip 172.17.10.1
+no shutdown
+
+interface vlan 11
+description Gateway para la VLAN 11
+ip address 172.17.11.2 255.255.255.0
+standby version 2
+standby 11 ip 172.17.11.1
+no shutdown
+
+interface vlan 12
+description Gateway para la VLAN 12
+ip address 172.17.12.2 255.255.255.0
+standby version 2
+standby 12 ip 172.17.12.1
+no shutdown
+
+interface vlan 13
+description Gateway para la VLAN 13
+ip address 172.17.13.2 255.255.255.0
+standby version 2
+standby 13 ip 172.17.13.1
+no shutdown
+
+interface vlan 20
+description Gateway para la VLAN 20
+ip address 172.17.20.2 255.255.255.0
+standby version 2
+standby 20 ip 172.17.20.1
+no shutdown
+
+interface vlan 21
+description Gateway para la VLAN 21
+ip address 172.17.21.2 255.255.255.0
+standby version 2
+standby 21 ip 172.17.21.1
+no shutdown
+
+interface vlan 30
+description Gateway para la VLAN 30
+ip address 172.17.30.2 255.255.255.0
+standby version 2
+standby 30 ip 172.17.30.1
+no shutdown
+
+interface vlan 31
+description Gateway para la VLAN 31
+ip address 172.17.31.2 255.255.255.0
+standby version 2
+standby 31 ip 172.17.31.1
+no shutdown
+
+interface vlan 40
+description Gateway para la VLAN 40
+ip address 172.17.40.2 255.255.255.0
+standby version 2
+standby 40 ip 172.17.40.1
+no shutdown
+
+interface vlan 50
+description Gateway para la VLAN 50
+ip address 172.17.50.2 255.255.255.0
+standby version 2
+standby 50 ip 172.17.50.1
+no shutdown
+
+interface vlan 100
+description Gateway para la VLAN 100
+ip address 172.17.100.2 255.255.255.0
+standby version 2
+standby 100 ip 172.17.100.1
+no shutdown
+exit
+
+interface fa0/5
+description Ruta hacia R1
+no switchport
+ip address 10.254.3.2 255.255.255.252
+no shutdown
+
+interface fa0/6
+description Ruta al Servidor WEB
+no switchport
+ip address 10.254.7.1 255.255.255.252
+no shutdown
+exit
+
+ip route 0.0.0.0 0.0.0.0 fa0/5
+
+router ospf 10
+router-id 3.3.3.3
+network 10.254.3.2 0.0.0.0 area 0
+network 10.254.7.1 0.0.0.0 area 0
+network 172.17.10.0 0.0.0.255 area 0
+network 172.17.11.0 0.0.0.255 area 0
+network 172.17.12.0 0.0.0.255 area 0
+network 172.17.13.0 0.0.0.255 area 0
+network 172.17.20.0 0.0.0.255 area 0
+network 172.17.21.0 0.0.0.255 area 0
+network 172.17.30.0 0.0.0.255 area 0
+network 172.17.31.0 0.0.0.255 area 0
+network 172.17.40.0 0.0.0.255 area 0
+network 172.17.50.0 0.0.0.255 area 0
+network 172.17.100.0 0.0.0.255 area 0
+passive-interface fa0/6
+auto-cost reference-bandwidth 10000
+exit
+
+interface fa0/5
+ip ospf network point-to-point
+exit
+
+ntp server 10.254.5.2
+end
+exit

@@ -1,0 +1,100 @@
+enable
+configure terminal
+no ip domain lookup
+hostname Administracion-SW3B
+banner motd #WARNING: Unauthorized Access is Prohibited!#
+
+line console 0
+password admin
+login
+exit
+
+enable secret admin
+service password-encryption
+
+spanning-tree mode rapid-pvst
+
+interface vlan 100
+description Interfaz de Administración Remota
+ip address 172.17.100.32 255.255.255.0
+no shutdown
+exit
+ip default-gateway 172.17.100.1
+
+ip domain-name sector3B.com
+username admin secret admin
+crypto key generate rsa
+1024
+ip ssh version 2
+
+line vty 0 4
+login local
+transport input ssh
+access-class ADMIN-REMOTA in
+exit
+
+ip access-list standard ADMIN-REMOTA
+permit 172.17.20.0 0.0.0.255
+exit
+
+vlan 10
+name Administracion
+vlan 11
+name Legales
+vlan 12
+name RRHH
+vlan 13
+name Gerencia
+vlan 20
+name Mantenimiento
+vlan 21
+name Ingenieria
+vlan 30
+name Logistica
+vlan 31
+name Porteria
+vlan 40
+name CCTV
+vlan 50
+name Voz
+vlan 100
+name Administracion_Remota
+vlan 1000
+name Sin_Uso
+exit
+
+interface range fa0/3-22
+description Host de Portería
+switchport mode access
+switchport access vlan 31
+mls qos trust cos
+switchport voice vlan 50
+no shutdown
+
+interface range fa0/23
+description CCTV
+switchport mode access
+switchport access vlan 40
+no shutdown
+
+interface range fa0/1-2 
+description Puerto Troncal
+switchport mode trunk
+switchport trunk native vlan 1
+switchport trunk allowed vlan 1,10,11,12,13,20,21,30,31,40,50,100
+no shutdown
+
+interface range fa0/24, gi0/1-2
+description Puerto sin Utilizar
+switchport mode access
+switchport access vlan 1000
+shutdown
+
+interface range fa0/3-23
+spanning-tree portfast
+spanning-tree bpduguard enable
+exit
+
+ntp server 10.254.5.2
+end
+exit

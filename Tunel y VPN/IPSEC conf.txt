@@ -1,0 +1,42 @@
+R1: 
+ip route 0.0.0.0 0.0.0.0 se0/0/0
+R3:
+ip route 0.0.0.0 0.0.0.0 se0/0/1
+ISP: se puede hacer ruta estatica por defecto pero hacemos de siguiente salto
+ip route 192.168.0.0 255.255.255.0 209.165.200.1
+ip route 192.168.1.0 255.255.255.0 209.165.200.5
+
+
+
+
+show version: si seguridad deshabilitada entonces: license boot module c2900 technology-package (luego write y reload)
+access-list 102 permit ip 192.168.0.0 0.0.0.255 192.168.1.0 0.0.0.255
+crypto isakmp policy 102
+encryption aes 256
+authentication pre-share
+group 5
+crypto isakmp key vpn address 209.165.200.5 (destino) (vpn es la key)
+crypto ipsec transform-set VPNIPSEC esp-aes esp-sha-hmac
+crypto map VPNMAP 102 ipsec-isakmp
+set peer 209.165.200.5
+set transform-set VPNIPSEC
+match address 102
+
+
+int se0/0/0
+crypto map VPNMAP
+
+
+
+show crypto isakmp sa
+show crypto ipsec sa
+
+
+
+interface tunnel 0
+tunnel mode gre ip
+ip address 10.0.0.1 255.255.255.252
+tunnel source se0/0/0 (realmente va la ip publica de origen pero en packet tracer va la interfaz)
+tunnel destination 209.165.200.5
+
+show interface tunnel 0

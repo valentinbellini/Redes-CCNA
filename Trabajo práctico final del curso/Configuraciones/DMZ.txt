@@ -1,0 +1,52 @@
+enable
+configure terminal
+no ip domain lookup
+hostname DMZ
+banner motd #WARNING: Unauthorized Access is Prohibited!#
+
+line console 0
+password admin
+login
+exit
+
+enable secret admin
+service password-encryption
+
+interface vlan 1
+description Interfaz de Administración Remota
+ip address 172.18.10.4 255.255.255.248
+no shutdown
+exit
+ip default-gateway 172.18.10.1
+
+ip domain-name DMZ.com
+username admin secret admin
+crypto key generate rsa
+1024
+ip ssh version 2
+
+line vty 0 4
+login local
+transport input ssh
+access-class ADMIN-REMOTA in
+exit
+
+ip access-list standard ADMIN-REMOTA
+permit 172.17.20.0 0.0.0.255
+exit
+
+interface range fa0/1-3
+description Puerto de Acceso
+switchport mode access
+no shutdown
+
+interface range fa0/4-24, gi0/1-2
+description Puerto sin Utilizar
+switchport mode access
+switchport access vlan 1000
+shutdown
+exit
+
+ntp server 10.254.5.2
+end
+exit

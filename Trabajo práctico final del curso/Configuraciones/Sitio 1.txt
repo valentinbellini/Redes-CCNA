@@ -1,0 +1,81 @@
+enable
+configure terminal
+no ip domain lookup
+hostname Planta-SW1
+banner motd #WARNING: Unauthorized Access is Prohibited!#
+
+line console 0
+password admin
+login
+exit
+
+enable secret admin
+service password-encryption
+
+spanning-tree mode rapid-pvst
+
+interface vlan 100
+description Interfaz de Administración Remota
+ip address 172.16.100.11 255.255.254.0
+no shutdown
+exit
+ip default-gateway 172.16.100.1
+
+ip domain-name sitio1.com
+username admin secret admin
+crypto key generate rsa
+1024
+ip ssh version 2
+
+line vty 0 4
+login local
+transport input ssh
+access-class ADMIN-REMOTA in
+exit
+
+ip access-list standard ADMIN-REMOTA
+permit 172.16.1.42
+permit 172.16.100.41
+exit
+
+vlan 40
+name CCTV_VLAN
+vlan 100
+name Administracion_Remota
+vlan 1000
+name Sin_Uso
+exit
+
+interface range fa0/3-12
+description Host de Planta
+switchport mode access
+switchport access vlan 1
+no shutdown 
+
+interface fa0/13
+description CCTV
+switchport mode access
+switchport access vlan 40
+no shutdown
+
+interface range fa0/1-2 
+description Puerto Troncal
+switchport mode trunk
+switchport trunk native vlan 1
+switchport trunk allowed vlan 1,40,100
+no shutdown
+
+interface range fa0/14-24, gi0/1-2
+description Puerto sin Utilizar
+switchport mode access
+switchport access vlan 1000
+shutdown
+
+interface range fa0/3-13
+spanning-tree portfast
+spanning-tree bpduguard enable
+exit
+
+ntp server 10.254.5.2
+end
+exit

@@ -1,0 +1,74 @@
+enable
+configure terminal
+no ip domain lookup
+hostname R1
+banner motd #WARNING: Unauthorized Access is Prohibited!#
+
+line console 0
+password admin
+login
+exit
+
+enable secret admin
+service password-encryption
+
+ip domain-name R1.com
+username admin secret admin
+crypto key generate rsa
+1024
+ip ssh version 2
+
+line vty 0 4
+login local
+transport input ssh
+access-class ADMIN-REMOTA in
+exit
+
+ip access-list standard ADMIN-REMOTA
+permit 172.18.10.42
+permit 172.16.100.41
+exit
+
+interface se0/0/0
+description Ruta a R2
+ip address 10.254.1.1 255.255.255.252
+no shutdown
+
+interface gi0/0
+description Ruta a Planta-MSW1
+ip address 10.254.2.1 255.255.255.252
+no shutdown
+
+interface gi0/1
+description Ruta a Administracion-MSW1
+ip address 10.254.3.1 255.255.255.252
+no shutdown
+
+interface gi0/2
+description Ruta a la DMZ
+ip address 172.18.10.1 255.255.255.248
+no shutdown
+exit
+
+ip route 0.0.0.0 0.0.0.0 se0/0/0
+
+router ospf 10
+router-id 5.5.5.5
+network 10.254.1.1 0.0.0.0 area 0
+network 10.254.2.1 0.0.0.0 area 0
+network 10.254.3.1 0.0.0.0 area 0
+network 172.18.10.1 0.0.0.0 area 0
+passive-interface gi0/2
+auto-cost reference-bandwidth 10000
+exit
+
+interface range gi0/0-1
+ip ospf network point-to-point
+
+interface se0/0/0
+ip ospf network point-to-point
+exit
+
+ntp server 10.254.5.2
+end
+exit

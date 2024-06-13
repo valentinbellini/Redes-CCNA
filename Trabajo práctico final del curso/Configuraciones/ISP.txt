@@ -1,0 +1,46 @@
+enable
+configure terminal
+no ip domain lookup
+hostname ISP
+banner motd #WARNING: Unauthorized Access is Prohibited!#
+
+line console 0
+password admin
+login
+exit
+
+enable secret admin
+service password-encryption
+
+ip domain-name ISP.com
+username admin secret admin
+crypto key generate rsa
+1024
+ip ssh version 2
+line vty 0 4
+login local
+transport input ssh
+exit
+
+interface se0/1/0
+description Ruta a R3 (Remoto)
+ip address 64.100.1.1 255.255.255.252
+no shutdown
+
+interface se0/1/1
+description Ruta a R2
+ip address 64.100.0.1 255.255.255.252
+no shutdown
+
+interface lo0
+description Simula salida a Internet
+ip address 209.165.200.1 255.255.255.252
+no shutdown
+exit
+
+ip route 0.0.0.0 0.0.0.0 lo0 
+ip route 209.165.200.236 255.255.255.252 se0/1/0
+ip route 209.165.200.232 255.255.255.252 se0/1/1
+ip route 209.165.200.228 255.255.255.255 se0/1/1
+end
+exit
