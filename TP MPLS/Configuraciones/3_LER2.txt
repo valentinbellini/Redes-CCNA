@@ -1,0 +1,28 @@
+
+LER2# configure terminal
+LER2(config)# interface fastEthernet 0/0
+LER2(config-if)# ip address 200.150.2.1 255.255.255.252
+LER2(config-if)# mpls ip
+LER2(config-if)# no shutdown
+LER2(config-if)# exit
+
+LER2(config)# interface fastEthernet 0/1
+LER2(config-if)# ip address 192.168.2.1 255.255.255.0
+LER2(config-if)# no shutdown
+LER2(config-if)# exit
+
+LER2(config)# interface loopback 0 
+LER2(config-if)# ip address 10.255.255.2 255.255.255.0
+LER2(config-if)# exit
+
+LER2(config)# router ospf 1
+LER2(config-router)# network 200.150.2.0 0.0.0.3 area 0
+LER2(config-router)# network 192.168.2.0 0.0.0.255 area 0
+LER2(config-router)# network 10.255.255.2 0.0.0.0 area 0
+LER2(config-router)# exit
+
+LER2(config)# mpls label protocol ldp
+LER2(config)# mpls ldp router-id loopback 0
+LER2(config)# end
+LER2# write
+

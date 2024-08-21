@@ -1,0 +1,36 @@
+
+LSR2# configure terminal
+LSR2(config)# interface fastEthernet 0/0
+LSR2(config-if)# ip address 120.100.23.1 255.255.255.252
+LSR2(config-if)# mpls ip
+LSR2(config-if)# no shutdown
+LSR2(config-if)# exit
+
+LSR2(config)# interface fastEthernet 0/1
+LSR2(config-if)# ip address 120.100.12.2 255.255.255.252
+LSR2(config-if)# mpls ip
+LSR2(config-if)# no shutdown
+LSR2(config-if)# exit
+
+LSR2(config)# interface fastEthernet 1/0
+LSR2(config-if)# ip address 200.150.2.2 255.255.255.252
+LSR2(config-if)# mpls ip
+LSR2(config-if)# no shutdown
+LSR2(config-if)# exit
+
+LSR2(config)# interface loopback 0 
+LSR2(config-if)# ip address 10.255.255.5 255.255.255.0
+LSR2(config-if)# exit
+
+LSR2(config)# router ospf 1
+LSR2(config-router)# network 120.100.23.0 0.0.0.3 area 0
+LSR2(config-router)# network 120.100.12.0 0.0.0.3 area 0
+LSR2(config-router)# network 200.150.2.0 0.0.0.3 area 0
+LSR2(config-router)# network 10.255.255.5 0.0.0.0 area 0
+LSR2(config-router)# exit
+
+LSR2(config)# mpls label protocol ldp
+LSR2(config)# mpls ldp router-id loopback 0
+LSR2(config)# end
+LSR2# write
+
